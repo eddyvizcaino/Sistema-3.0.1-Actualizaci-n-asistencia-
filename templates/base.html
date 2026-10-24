@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title_tag %}{{ title or 'Sistema de Iglesia' }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% if user %}
+{% set ep = request.endpoint or '' %}
+<nav class="side">
+  <div class="brand sidebar-logo-wrap"><img class="sidebar-logo" src="{{ url_for('static', filename='logo-cogop-login.webp') }}" width="92" height="137" alt="Logo Iglesia de Dios de la Profecía" decoding="async"></div>
+  {% if has_module('home') %}  <a href="{{ url_for('pages.home') }}" class="{{ 'active' if ep == 'pages.home' }}">INICIO</a>{% endif %}
+  {% if has_module('members') %}  <a href="{{ url_for('members.members') }}" class="{{ 'active' if ep.startswith('members.') and ep not in ('members.registrations','members.registration_qr') }}">MIEMBROS</a>{% endif %}
+  {% if is_admin %}<a href="{{ url_for('members.registrations') }}" class="{{ 'active' if ep in ('members.registrations','members.registration_qr') }}">QR &amp; LINK</a>{% endif %}
+  {% if has_module('ministries') %}  <a href="{{ url_for('ministries.ministries') }}" class="{{ 'active' if ep.startswith('ministries.') }}">MINISTERIOS</a>{% endif %}
+  {% if has_module('communities') %}  <a href="{{ url_for('communities.index') }}" class="{{ 'active' if ep.startswith('communities.') }}">COMUNIDADES DE ORACIÓN</a>{% endif %}
+  {% if has_module('conversions') %}  <a href="{{ url_for('conversions.conversions') }}" class="{{ 'active' if ep.startswith('conversions.') }}">CONVERTIDOS</a>{% endif %}
+  {% if has_module('attendance') %}  <a href="{{ url_for('attendance.mobile_app') }}" class="{{ 'active' if ep.startswith('attendance.') }}">ASISTENCIA</a>{% endif %}
+  {% if has_module('birthdays') %}  <a href="{{ url_for('pages.birthdays') }}" class="{{ 'active' if ep == 'pages.birthdays' }}">CUMPLEAÑOS</a>{% endif %}
+{% if has_module('reports') %}  <a href="{{ url_for('reports.reports') }}" class="{{ 'active' if ep.startswith('reports.') }}">REPORTES</a>{% endif %}
+  {% if is_admin %}<a href="{{ url_for('auth.change_password') }}" class="{{ 'active' if ep == 'auth.change_password' }}">CAMBIAR CONTRASEÑA</a>{% endif %}
+  {% if has_module('foligruc') %}<a href="{{ url_for('foligruc.home') }}">FOLIGRUC</a>{% endif %}
+  {% if is_admin %}
+  <a href="{{ url_for('members.trash') }}">PAPELERA</a>
+  <a href="{{ url_for('admin.users') }}" class="{{ 'active' if ep == 'admin.users' }}">USUARIOS</a>
+  <a href="{{ url_for('admin.audit_view') }}" class="{{ 'active' if ep == 'admin.audit_view' }}">HISTORIAL DE ACTIVIDAD</a>
+  <a href="{{ url_for('admin.security') }}" class="{{ 'active' if ep == 'admin.security' }}">SEGURIDAD</a>
+  <a href="{{ url_for('admin.backup') }}" class="{{ 'active' if ep.startswith('admin.backup') }}">COPIA DE SEGURIDAD</a>
+  {% endif %}
+  <form method="post" action="{{ url_for('auth.logout') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="linkbtn">CERRAR SESIÓN</button>
+  </form>
+</nav>
+{% endif %}
+<main class="main{% if not user %} nomenu{% endif %}">
+  {% if user %}
+  <div class="top"><b>{{ title }}</b><div>{{ user['FullName'] or user['Username'] }} · {{ role_label }}{% if not is_admin %} · <a href="{{ url_for('auth.change_password') }}">Mi cuenta</a>{% endif %}</div></div>
+  {% endif %}
+  {% for message in get_flashed_messages() %}<div class="notice">{{ message }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

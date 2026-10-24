@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf, field, textarea, select %}
+{% block content %}
+<form method="post">
+  {{ csrf() }}
+  <div class="panel">
+    <div class="grid2">
+      <div>
+        {{ field('Título del evento', 'Name', e.get('Name'), required=True, maxlength=150) }}
+        {{ field('Fecha', 'EventDate', e.get('EventDate'), type='date', required=True) }}
+        {{ field('Hora', 'EventTime', e.get('EventTime'), type='time') }}
+        {{ field('Lugar', 'Venue', e.get('Venue'), maxlength=150) }}
+        {{ field('Responsable', 'Responsible', e.get('Responsible'), maxlength=150) }}
+      </div>
+      <div>
+        <div class="field">
+          <label for="f_MinistryId">Ministerio</label>
+          {% if locked %}
+          <select id="f_MinistryId" disabled>
+            {% for x in ministries %}{% if user['MinistryId'] == x['Id'] %}<option selected>{{ x['Name'] }}</option>{% endif %}{% endfor %}
+          </select>
+          {% else %}
+          <select id="f_MinistryId" name="MinistryId">
+            <option value="">General (toda la iglesia)</option>
+            {% for x in ministries %}<option value="{{ x['Id'] }}" {% if e.get('MinistryId') == x['Id'] %}selected{% endif %}>{{ x['Name'] }}</option>{% endfor %}
+          </select>
+          {% endif %}
+        </div>
+        {{ select('Estado', 'Status', statuses, e.get('Status') or 'Próximo') }}
+        {{ field('Recordatorio interno', 'Reminder', e.get('Reminder'), maxlength=250) }}
+        {{ field('Tema', 'Theme', e.get('Theme'), maxlength=200) }}
+        {{ textarea('Notas', 'Notes', e.get('Notes')) }}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn save">GUARDAR</button>
+      <a class="btn cancel" href="{{ url_for('events.events') }}">CANCELAR</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

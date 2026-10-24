@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="error-box">
+  <h1>{{ code }}</h1>
+  <h2>{{ title }}</h2>
+  <p>{{ message }}</p>
+  <div class="actions" style="justify-content:center">
+    <a class="btn save" href="{{ url_for('pages.home') if user else url_for('auth.login') }}">VOLVER AL INICIO</a>
+  </div>
+</div>
+{% endblock %}

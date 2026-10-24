@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf, field, textarea, select %}
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+  {{ csrf() }}
+<div class="panel scan-panel" id="identity-tools" data-member-id="{{ m.get('Id') or '' }}">
+  <h2>LECTURA DE CÉDULA</h2>
+  <label for="tera-code">Lector Tera USB / Bluetooth</label>
+  <textarea id="tera-code" rows="2" maxlength="16000" autocomplete="off" spellcheck="false" placeholder="Coloque el cursor aquí y escanee. El lector debe estar en modo teclado."></textarea>
+  <div class="actions">
+    <button type="button" class="btn cancel" id="read-tera">LEER CÓDIGO</button>
+    <button type="button" class="btn save" id="scan-front">ESCANEAR FRENTE DE CÉDULA</button>
+    <button type="button" class="btn cancel" id="scan-barcode">CÁMARA: CÓDIGO DE BARRAS</button>
+  </div>
+  <p class="small">Si el código no contiene todos los datos, use el frente. También puede escribir los cuatro campos manualmente. La imagen se procesa en este navegador; no se envía ni se guarda en el sistema. El OCR necesita Internet para descargar su motor.</p>
+  <div id="scan-status" role="status" aria-live="polite"></div>
+  <div id="duplicate-status" role="alert">{% if duplicate.exists %}{{ duplicate.message }} {% if duplicate.url %}<a href="{{ duplicate.url }}">ABRIR PERFIL EXISTENTE</a>{% endif %}{% endif %}</div>
+</div>
+<dialog id="scan-dialog" aria-labelledby="scan-title">
+  <h2 id="scan-title">ESCANEAR FRENTE DE CÉDULA</h2>
+  <p>Encuadre el frente completo, horizontal y sin reflejos. Use buena luz.</p>
+  <video id="scan-video" playsinline autoplay muted></video>
+  <div class="actions"><button type="button" class="btn save" id="capture-front">CAPTURAR Y LEER</button><button type="button" class="btn cancel" id="cancel-scan">CANCELAR</button></div>
+</dialog>
+<dialog id="review-dialog" aria-labelledby="review-title">
+  <h2 id="review-title">REVISAR DATOS DETECTADOS</h2>
+  <p>Corrija los resultados. Los campos vacíos conservarán lo que ya escribió en el formulario.</p>
+  <p id="review-warnings" role="status"></p>
+  <div class="field"><label for="review-FirstName">Nombres</label><input id="review-FirstName" maxlength="80"></div>
+  <div class="field"><label for="review-LastName">Apellidos</label><input id="review-LastName" maxlength="80"></div>
+  <div class="field"><label for="review-BirthDate">Fecha de nacimiento</label><input id="review-BirthDate" type="date"></div>
+  <div class="field"><label for="review-Cedula">Número de cédula</label><input id="review-Cedula" maxlength="30"></div>
+  <div class="actions"><button type="button" class="btn save" id="apply-detected">APLICAR DATOS REVISADOS</button><button type="button" class="btn cancel" id="cancel-review">DESCARTAR</button></div>
+</dialog>
+
+  <div class="panel">
+    <div class="grid2">
+      <div>
+        <div class="section">DATOS PERSONALES</div>
+        {{ field('Nombres', 'FirstName', m.get('FirstName'), required=True, maxlength=80) }}
+        {{ field('Apellidos', 'LastName', m.get('LastName'), required=True, maxlength=80) }}
+        <div class="field">
+          <label for="Cedula">Cédula</label>
+          <div style="display:flex;gap:8px">
+            <input id="Cedula" name="Cedula" value="{{ m.get('Cedula') or '' }}" placeholder="000-0000000-0" maxlength="30">
+            
+          </div>
+          <div class="small">Se comprueba automáticamente si ya existe. Revise los cuatro campos antes de guardar.</div>
+        </div>
+        {{ field('Fecha de nacimiento', 'BirthDate', m.get('BirthDate'), type='date') }}
+        {{ select('Estado civil', 'MaritalStatus', marital_statuses, m.get('MaritalStatus') or 'Soltero/a') }}
+        <div id="spouse-fields" class="panel" style="display:none">
+          <h3>Esposo o esposa</h3>
+          <div class="field"><label for="SpouseMemberId">Buscar cónyuge registrado</label>
+            <input id="spouse-search" type="search" placeholder="Buscar nombre o MEM..." autocomplete="off">
+            <select id="SpouseMemberId" name="SpouseMemberId"><option value="">Sin cónyuge miembro seleccionado</option>
+              {% for person in spouse_members %}<option value="{{ person.Id }}" {% if m.get('SpouseMemberId') == person.Id %}selected{% endif %}>{{ person.FullName }} ({{ person.MemberCode or 'Sin MEM' }})</option>{% endfor %}
+            </select>
+          </div>
+          {{ field('Nombre de cónyuge externo (si no es miembro)', 'SpouseExternalName', m.get('SpouseExternalName'), maxlength=160) }}
+          <p class="small">Elija un miembro o escriba el nombre externo; no ambos.</p>
+        </div>
+        <div id="minor-fields" class="panel" style="display:none">
+          <h3>Padres o tutor (menores de 18 años)</h3>
+          {{ field('Nombre del padre', 'FatherName', m.get('FatherName'), maxlength=160) }}
+          {{ field('Nombre de la madre', 'MotherName', m.get('MotherName'), maxlength=160) }}
+          {{ field('Nombre del tutor', 'TutorName', m.get('TutorName'), maxlength=160) }}
+        </div>
+        {{ field('Profesión', 'Profession', m.get('Profession'), maxlength=120) }}
+        <div class="field">
+          <label for="ProfilePhoto">Foto de perfil</label>
+          <input id="ProfilePhoto" type="file" name="ProfilePhoto" accept="image/jpeg,image/png,image/webp" capture="user">
+          {% if m.get('ProfilePhoto') %}<div class="small">Ya tiene foto. Suba otra solo si desea reemplazarla.</div>{% endif %}
+        </div>
+        {# Grupo se conserva internamente, pero queda oculto en la ficha de Miembros. #}
+        <input type="hidden" name="GroupName" value="{{ m.get('GroupName') or '' }}">
+        {{ field('Teléfono', 'Phone', m.get('Phone'), maxlength=40) }}
+        {{ field('Dirección', 'Address', m.get('Address'), maxlength=250) }}
+      </div>
+      <div>
+        <div class="section">INFORMACIÓN DE LA IGLESIA</div>
+        {{ select('Estado', 'Status', statuses, m.get('Status') or 'Activo') }}
+        <div class="field">
+          <label for="f_MinistryId">Ministerio</label>
+          {% if locked %}
+          <select id="f_MinistryId" disabled>
+            {% for x in ministries %}<option {% if user['MinistryId'] == x['Id'] %}selected{% endif %}>{{ x['Name'] }}</option>{% endfor %}
+          </select>
+          {% else %}
+          <select id="f_MinistryId" name="MinistryId">
+            <option value="">Sin ministerio</option>
+            {% for x in ministries %}<option value="{{ x['Id'] }}" {% if m.get('MinistryId') == x['Id'] %}selected{% endif %}>{{ x['Name'] }}</option>{% endfor %}
+          </select>
+          {% endif %}
+        </div>
+        {{ field('Fecha de ingreso', 'JoinDate', m.get('JoinDate') if m else today, type='date') }}
+        {{ select('Bautizado', 'Baptized', baptized_options, m.get('Baptized') or '') }}
+        {{ field('Fecha de bautizo', 'BaptismDate', m.get('BaptismDate'), type='date') }}
+        {{ select('Cargo dentro del ministerio', 'ChurchRole', roles, m.get('ChurchRole') or 'Miembro') }}
+        {{ field('Último contacto', 'LastContact', m.get('LastContact'), type='date') }}
+        {{ select('Estado de seguimiento', 'FollowUpStatus', followups, m.get('FollowUpStatus') or 'Activo') }}
+        {{ textarea('Notas de seguimiento', 'FollowUpNotes', m.get('FollowUpNotes')) }}
+        {{ textarea('Observaciones', 'Notes', m.get('Notes')) }}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn save" id="save-member">GUARDAR</button>
+      <a class="btn cancel" href="{{ url_for('members.members') }}">CANCELAR</a>
+    </div>
+  </div>
+</form>
+<script>
+(function(){
+ const birth=document.querySelector('[name="BirthDate"]');
+ const civil=document.querySelector('[name="MaritalStatus"]');
+ const family=document.getElementById('minor-fields');
+ const spouse=document.getElementById('spouse-fields');
+ function refresh(){
+  let age=999;
+  if(birth.value){const [y,m,d]=birth.value.split('-').map(Number);const t=new Date();age=t.getFullYear()-y-((t.getMonth()+1<m || (t.getMonth()+1===m && t.getDate()<d))?1:0);}
+  family.style.display=age<18?'':'none';
+  spouse.style.display=civil.value==='Casado/a'?'':'none';
+ }
+ birth.addEventListener('change',refresh);civil.addEventListener('change',refresh);refresh();
+ const search=document.getElementById('spouse-search');const sel=document.getElementById('SpouseMemberId');
+ const options=Array.from(sel.options).slice(1).map(o=>({value:o.value,text:o.textContent}));
+ search.addEventListener('input',()=>{
+  const q=search.value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const selected=sel.value;
+  Array.from(sel.options).slice(1).forEach(o=>o.remove());
+  options.filter(o=>o.text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(q)||o.value===selected).forEach(o=>{const el=new Option(o.text,o.value);el.selected=o.value===selected;sel.add(el);});
+ });
+})();
+</script>
+<script src="{{ url_for('static', filename='cedula_parser.js') }}"></script>
+<script src="{{ url_for('static', filename='cedula_scan.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,17 @@
+[Unit]
+Description=Sistema Iglesia Web V2.7.2
+After=network.target postgresql.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/iglesia-web
+EnvironmentFile=/etc/iglesia-web.env
+ExecStart=/var/www/iglesia-web/.venv/bin/gunicorn app:app --bind 127.0.0.1:8000 --workers 1 --threads 4 --timeout 120
+Restart=always
+RestartSec=5
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

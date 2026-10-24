@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% block content %}{% if m['DeletedAt'] %}<div class="notice">Este miembro está en la papelera. Un administrador puede restaurarlo desde PAPELERA.</div>{% endif %}
+<div class="panel">
+  {% if m['ProfilePhoto'] %}
+  <img src="{{ url_for('members.photo', i=m['Id']) }}" alt="Foto de {{ name }}"
+       style="width:130px;height:130px;object-fit:cover;border-radius:50%;margin-bottom:15px">
+  {% else %}
+  <div style="width:130px;height:130px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;margin-bottom:15px">SIN FOTO</div>
+  {% endif %}
+  <h2>{{ name }}</h2>
+  <p><b>Código de miembro:</b> {{ m['MemberCode'] or '' }}</p>
+  <p><b>Teléfono:</b> {{ m['Phone'] or '' }}</p>
+  <p><b>Dirección:</b> {{ m['Address'] or '' }}</p>
+  <p><b>Ingreso:</b> {{ m['JoinDate'] or '' }}</p>
+  <p><b>Estado civil:</b> {{ m['MaritalStatus'] or '' }}</p>
+  {% if m['MaritalStatus']=='Casado/a' %}
+    <p><b>Esposo/a:</b> {% if spouse %}<a href="{{ url_for('members.member_profile',i=spouse.Id) }}">{{ spouse.FullName }} ({{ spouse.MemberCode }})</a>{% else %}{{ m['SpouseExternalName'] or 'No registrado' }}{% endif %}</p>
+  {% endif %}
+  {% if m['BirthDate'] %}
+    {% set age = (today[:4]|int - m['BirthDate'][:4]|int) - (today[5:] < m['BirthDate'][5:]) %}
+    {% if age < 18 %}
+      <p><b>Padre:</b> {{ m['FatherName'] or '' }}</p>
+      <p><b>Madre:</b> {{ m['MotherName'] or '' }}</p>
+      <p><b>Tutor:</b> {{ m['TutorName'] or '' }}</p>
+    {% endif %}
+  {% endif %}
+  <p><b>Profesión:</b> {{ m['Profession'] or '' }}</p>
+  <p><b>Bautizado:</b> {{ m['Baptized'] or '' }}</p>
+  <p><b>Fecha de bautizo:</b> {{ m['BaptismDate'] or '' }}</p>
+  <p><b>Estado:</b> {{ m['Status'] or '' }}</p>
+  <p><b>Ministerio:</b> {{ m['MinistryName'] or '' }}</p>
+  <p><b>Cargo:</b> {{ m['ChurchRole'] or 'Miembro' }}</p>
+  <p><b>Observaciones:</b> {{ m['Notes'] or '' }}</p>
+  <div class="actions"><a class="btn cancel" href="{{ url_for('members.edit_member', i=m['Id']) }}">EDITAR</a>{% if not m['DeletedAt'] %}<form method="post" action="{{ url_for('members.del_member', i=m['Id']) }}" onsubmit="return confirm('¿Enviar este miembro a la papelera?');">{{ csrf() }}<button class="btn danger" type="submit">ELIMINAR</button></form>{% endif %}</div>
+</div>
+<div class="panel">
+  <h2>HISTORIAL INDIVIDUAL</h2>
+  <table>
+    <tr><th>Fecha</th><th>Acción</th><th>Detalle</th></tr>
+    {% for h in history %}<tr><td>{{ h['CreatedAt'] }}</td><td>{{ h['Action'] }} · {{ h['Username'] or 'Sistema' }}</td><td>{{ h['Details'] or '' }}</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

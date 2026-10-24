@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="birthday-toolbar panel">
+  <div class="field compact"><label for="birthday-search">Buscar</label><input id="birthday-search" type="search" placeholder="Nombre..."></div>
+  <div class="field compact"><label for="birthday-month">Mes</label><select id="birthday-month"><option value="">Todos</option>{% for name in month_names %}<option value="{{ loop.index }}">{{ name }}</option>{% endfor %}</select></div>
+  <div class="field compact"><label for="birthday-group">Ministerio / grupo</label><input id="birthday-group" type="search" placeholder="Ej. Damas, Jóvenes..."></div>
+</div>
+
+<div class="panel birthday-today"><h2>🎂 CUMPLEAÑOS DE HOY</h2>
+{% for x in today_birthdays %}<div class="birthday-person"><div><b>{{ x.row['Name'] }}</b> · {{ x.day_month }} · {{ x.row['GroupName'] or 'Sin grupo' }}{% if x.row['Phone'] %} · {{ x.row['Phone'] }}{% endif %}</div>{% if x.row['Phone'] %}<a class="btn save" target="_blank" rel="noopener" href="https://wa.me/{{ x.row['Phone']|replace(' ','')|replace('-','')|replace('(','')|replace(')','') }}?text={{ ('¡Feliz cumpleaños, ' ~ x.row['Name'] ~ '! Que Dios continúe bendiciendo su vida.')|urlencode }}">WhatsApp</a>{% endif %}</div>
+{% else %}<p>No hay cumpleaños hoy.</p>{% endfor %}</div>
+
+<div class="panel"><h2>⏪ CUMPLEAÑOS · ÚLTIMOS 7 DÍAS</h2><table><tr><th>Nombre</th><th>Día &amp; mes</th><th>Grupo</th><th>Hace</th><th>Teléfono</th></tr>{% for x in recent %}<tr><td>{{ x.row['Name'] }}</td><td>{{ x.row['BirthDate'][8:10] }}/{{ x.row['BirthDate'][5:7] }}</td><td>{{ x.row['GroupName'] or '' }}</td><td>{{ x.since }} día{{ 's' if x.since != 1 else '' }}</td><td>{{ x.row['Phone'] or '' }}</td></tr>{% else %}<tr><td colspan="5">No hubo cumpleaños en los últimos 7 días.</td></tr>{% endfor %}</table></div>
+
+<div class="panel"><h2>📅 PRÓXIMOS 7 DÍAS</h2><table><tr><th>Nombre</th><th>Día &amp; mes</th><th>Grupo</th><th>Faltan</th><th>Teléfono</th></tr>{% for x in next7 %}<tr><td>{{ x.row['Name'] }}</td><td>{{ x.day_month }}</td><td>{{ x.row['GroupName'] or '' }}</td><td>{% if x.days == 1 %}Mañana{% else %}En {{ x.days }} días{% endif %}</td><td>{{ x.row['Phone'] or '' }}</td></tr>{% else %}<tr><td colspan="5">No hay cumpleaños en los próximos 7 días.</td></tr>{% endfor %}</table></div>
+
+<div class="panel"><h2>🗓️ CUMPLEAÑOS DEL MES ACTUAL</h2><table><tr><th>Nombre</th><th>Día &amp; mes</th><th>Grupo</th><th>Teléfono</th><th></th></tr>{% for x in current_month %}<tr><td>{{ x.row['Name'] }}</td><td>{{ x.row['BirthDate'][8:10] }}/{{ x.row['BirthDate'][5:7] }}</td><td>{{ x.row['GroupName'] or '' }}</td><td>{{ x.row['Phone'] or '' }}</td><td>{% if x.row['Phone'] %}<a class="btn save" target="_blank" rel="noopener" href="https://wa.me/{{ x.row['Phone']|replace(' ','')|replace('-','')|replace('(','')|replace(')','') }}?text={{ ('¡Feliz cumpleaños, ' ~ x.row['Name'] ~ '! Que Dios continúe bendiciendo su vida.')|urlencode }}">WhatsApp</a>{% endif %}</td></tr>{% else %}<tr><td colspan="5">No hay cumpleaños registrados este mes.</td></tr>{% endfor %}</table></div>
+
+<div class="panel" id="all-birthdays"><h2>TODOS LOS CUMPLEAÑOS</h2>
+{% for month_num, month_name, members in annual %}<section class="birthday-month" data-month="{{ month_num }}"><h3>{{ month_name }}</h3><table><tr><th>Nombre</th><th>Día &amp; mes</th><th>Grupo</th><th>Teléfono</th><th>WhatsApp</th></tr>{% for x in members %}<tr class="birthday-row" data-name="{{ x.row['Name']|lower }}" data-group="{{ (x.row['GroupName'] or '')|lower }}"><td>{{ x.row['Name'] }}</td><td>{{ x.row['BirthDate'][8:10] }}/{{ x.row['BirthDate'][5:7] }}</td><td>{{ x.row['GroupName'] or '' }}</td><td>{{ x.row['Phone'] or '' }}</td><td>{% if x.row['Phone'] %}<a target="_blank" rel="noopener" href="https://wa.me/{{ x.row['Phone']|replace(' ','')|replace('-','')|replace('(','')|replace(')','') }}?text={{ ('¡Feliz cumpleaños, ' ~ x.row['Name'] ~ '! Que Dios continúe bendiciendo su vida.')|urlencode }}">Enviar</a>{% endif %}</td></tr>{% else %}<tr class="empty-month"><td colspan="5" class="small">Sin cumpleaños registrados.</td></tr>{% endfor %}</table></section>{% endfor %}</div>
+<script>
+(function(){
+ const search=document.getElementById('birthday-search'), month=document.getElementById('birthday-month'), group=document.getElementById('birthday-group');
+ function filter(){const q=search.value.trim().toLowerCase(), g=group.value.trim().toLowerCase(), m=month.value; document.querySelectorAll('.birthday-month').forEach(sec=>{let any=false; const monthOK=!m||sec.dataset.month===m; sec.querySelectorAll('.birthday-row').forEach(row=>{const ok=monthOK&&(!q||row.dataset.name.includes(q))&&(!g||row.dataset.group.includes(g)); row.style.display=ok?'':'none'; if(ok)any=true;}); sec.style.display=(monthOK&&any)?'':'none';});}
+ [search,month,group].forEach(el=>el.addEventListener('input',filter)); month.addEventListener('change',filter);
+})();
+</script>
+{% endblock %}

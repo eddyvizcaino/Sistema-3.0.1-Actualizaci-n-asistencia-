@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="panel"><h2>QR &amp; LINK DE REGISTRO</h2>
+  <p>Comparta este enlace o código QR. La persona completa el formulario, pero <b>no se convierte en miembro</b> hasta que el Administrador apruebe la solicitud.</p>
+  <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+    <div style="background:#fff;padding:12px;border:1px solid #ddd;border-radius:8px">
+      <img src="{{ url_for('members.registration_qr') }}" alt="Código QR de registro" style="width:190px;height:190px;display:block">
+    </div>
+    <div style="min-width:280px;flex:1">
+      <label><b>LINK PÚBLICO</b></label>
+      <input id="publicLink" value="{{ link }}" readonly style="width:100%;margin:8px 0">
+      <button class="btn save" type="button" onclick="navigator.clipboard.writeText(document.getElementById('publicLink').value);this.textContent='LINK COPIADO'">COPIAR LINK</button>
+      <a class="btn" href="{{ url_for('members.registration_qr', download=1) }}">DESCARGAR QR</a>
+      <a class="btn" href="{{ link }}" target="_blank" rel="noopener">ABRIR FORMULARIO</a>
+      <form method="post" action="{{ url_for('members.renew_registration_link') }}" style="display:inline" onsubmit="return confirm('El enlace anterior dejará de funcionar. ¿Generar uno nuevo?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn cancel">REVOCAR Y GENERAR NUEVO</button>
+      </form>
+      <p class="muted">Por seguridad, el enlace vence a los 30 días. Puede renovarlo antes si lo necesita.</p>
+    </div>
+  </div>
+</div>
+<div class="panel"><h2>SOLICITUDES RECIBIDAS ({{ pending|length }})</h2>
+  <p>Revise cada registro antes de aceptarlo. Solo las solicitudes aprobadas pasan a la lista oficial de Miembros.</p>
+  <table><tr><th>Nombre</th><th>Teléfono</th><th>Cédula</th><th>Grupo</th><th>Recibida</th><th>Acción</th></tr>
+  {% for item in pending %}<tr><td>{{ item.FirstName }} {{ item.LastName }}</td><td>{{ item.Phone }}</td><td>{{ item.Cedula or '—' }}</td><td>{{ item.GroupName }}</td><td>{{ item.CreatedAt }}</td><td>
+    {% for action,label in [('approve','ACEPTAR'),('reject','RECHAZAR')] %}
+    <form method="post" style="display:inline" onsubmit="return confirm('¿{{ label }} esta solicitud?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="registration_id" value="{{ item.Id }}"><input type="hidden" name="action" value="{{ action }}">
+      <button class="btn {{ 'save' if action=='approve' else 'cancel' }}">{{ label }}</button>
+    </form>{% endfor %}
+  </td></tr>{% else %}<tr><td colspan="6">No hay solicitudes pendientes.</td></tr>{% endfor %}</table>
+</div>
+{% endblock %}

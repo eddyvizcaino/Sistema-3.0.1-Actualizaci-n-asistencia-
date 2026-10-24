@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% block title_tag %}Iglesia de Dios de la Profecía · Veron Central{% endblock %}
+{% block content %}
+<div class="login-page">
+  <div class="login-card">
+    <img class="login-logo" src="{{ url_for('static', filename='logo-cogop-login.webp') }}" width="160" height="239" alt="Logo Iglesia de Dios de la Profecía" decoding="async" fetchpriority="high">
+    <h1>IGLESIA DE DIOS DE LA PROFECÍA</h1>
+    <div class="login-location">VERON CENTRAL</div>
+    <div class="login-divider"></div>
+    <h2>INICIAR SESIÓN</h2>
+    <form method="post">
+      {{ csrf() }}
+      <div class="field"><label for="username">Usuario</label><input id="username" name="username" required autocomplete="username" autofocus></div>
+      <div class="field"><label for="password">Contraseña</label><input id="password" type="password" name="password" required autocomplete="current-password"></div>
+      <button class="btn save login-button">INICIAR SESIÓN</button>
+    </form>
+    <blockquote>“Para que habite Cristo por la fe en vuestros corazones, a fin de que, arraigados y cimentados en amor.”<strong>Efesios 3:17</strong></blockquote>
+    <div class="login-version">Sistema de Gestión Iglesia · {{ version }}</div>
+  </div>
+</div>
+{% endblock %}

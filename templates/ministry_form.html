@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf, field, textarea %}
+{% block content %}
+<form method="post">
+  {{ csrf() }}
+  <div class="panel">
+    {{ field('Nombre del Ministerio', 'Name', m.get('Name'), required=True, maxlength=300) }}
+    <div class="section">ENCARGADOS DEL MINISTERIO</div>
+    <p class="small">Seleccione miembros existentes. Una misma persona no puede ocupar dos cargos en este ministerio.</p>
+    {% for key,label in [('LeaderMemberId','Encargado 1 – Líder'),('Assistant1MemberId','Encargado 2 – Asistente'),('Assistant2MemberId','Encargado 3 – Asistente')] %}
+    <div class="field"><label for="{{ key }}">{{ label }}</label><select id="{{ key }}" name="{{ key }}"><option value="">Sin asignar</option>
+      {% for x in member_options %}{% set nm=((x['FirstName'] or '') ~ ' ' ~ (x['LastName'] or ''))|trim %}<option value="{{ x['Id'] }}" {{ 'selected' if m.get(key)==x['Id'] }}>{{ x['MemberCode'] or '' }} · {{ nm or x['FullName'] }}</option>{% endfor %}
+    </select></div>
+    {% endfor %}
+    {{ textarea('Notas', 'Notes', m.get('Notes')) }}
+    <div class="actions"><button class="btn save" type="submit">GUARDAR</button><a class="btn cancel" href="{{ url_for('ministries.ministries') }}">CANCELAR</a></div>
+  </div>
+</form>
+{% endblock %}

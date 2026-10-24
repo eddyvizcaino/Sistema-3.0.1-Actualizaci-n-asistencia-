@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% block content %}
+<div class="panel">
+  <h2>CUENTAS Y ACCESOS</h2>
+  <p class="small">Tras 5 intentos fallidos seguidos, el usuario queda en espera 15 minutos automáticamente. Aquí puede bloquear o desbloquear cuentas de forma manual.</p>
+  <table>
+    <tr><th>Usuario</th><th>Último acceso</th><th>Intentos fallidos</th><th>Estado</th><th>Acción</th></tr>
+    {% for u in users %}
+    <tr>
+      <td>{{ u['Username'] }}</td><td>{{ u['LastLogin'] or 'Nunca' }}</td><td>{{ u['FailedAttempts'] or 0 }}</td>
+      <td>{{ 'Bloqueado' if u['Locked'] else 'Activo' }}</td>
+      <td>
+        <form method="post">
+          {{ csrf() }}
+          <input type="hidden" name="uid" value="{{ u['Id'] }}">
+          <input type="hidden" name="locked" value="{{ 0 if u['Locked'] else 1 }}">
+          <button class="btn cancel">{{ 'DESBLOQUEAR' if u['Locked'] else 'BLOQUEAR' }}</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+<div class="panel">
+  <h2>ÚLTIMOS INTENTOS DE ACCESO</h2>
+  <table>
+    <tr><th>Usuario</th><th>Resultado</th><th>Fecha y hora</th><th>IP</th></tr>
+    {% for r in logs %}
+    <tr><td>{{ r['Username'] }}</td>
+        <td>{{ {1: 'Correcto', 0: 'Fallido', 2: 'Bloqueado (demasiados intentos)'}.get(r['Success'], '') }}</td>
+        <td>{{ r['CreatedAt'] }}</td><td>{{ r['IpAddress'] or '' }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

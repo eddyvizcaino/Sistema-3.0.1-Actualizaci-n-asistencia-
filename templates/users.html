@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% block content %}
+<div class="panel">
+  <h2>CREAR USUARIO</h2>
+  <form method="post">
+    {{ csrf() }}
+    <div class="grid2">
+      <div>
+        <div class="field"><label for="FullName">Nombre completo</label><input id="FullName" name="FullName" maxlength="120" value="{{ form.get('FullName','') }}"></div>
+        <div class="field"><label for="Username">Usuario</label><input id="Username" name="Username" required maxlength="60" value="{{ form.get('Username','') }}" autocomplete="off"></div>
+        <div class="field"><label for="Password">Contraseña (mínimo 8)</label><input id="Password" type="password" name="Password" minlength="8" required autocomplete="new-password"></div>
+      </div>
+      <div>
+        <div class="field"><label for="Role">Tipo de usuario</label>
+          <select id="Role" name="Role">
+            <option value="Ministry" {% if form.get('Role','Ministry') == 'Ministry' %}selected{% endif %}>Líder Ministerio</option>
+            <option value="Pastor" {% if form.get('Role') == 'Pastor' %}selected{% endif %}>Pastor/a</option>
+            <option value="AssistantPastor" {% if form.get('Role') == 'AssistantPastor' %}selected{% endif %}>Secretaria General</option>
+            <option value="Attendance" {% if form.get('Role') == 'Attendance' %}selected{% endif %}>Registro de Asistencia</option>
+            <option value="Admin" {% if form.get('Role') == 'Admin' %}selected{% endif %}>Administrador</option>
+          </select></div>
+        <div class="field"><label for="MinistryId">Ministerio asignado</label>
+          <select id="MinistryId" name="MinistryId">
+            <option value="">Sin asignar / Administrador</option>
+            {% for m in mins %}<option value="{{ m['Id'] }}" {% if form.get('MinistryId') == m['Id']|string %}selected{% endif %}>{{ m['Name'] }}</option>{% endfor %}
+          </select></div>
+      </div>
+    </div>
+    <fieldset><legend>Módulos permitidos (Administrador tiene acceso completo)</legend>
+    {% for value,label in [('home','INICIO'),('members','MIEMBROS'),('ministries','MINISTERIOS'),('foligruc','FOLIGRUC'),('birthdays','CUMPLEAÑOS')] %}
+    <label style="display:inline-block;margin:10px"><input type="checkbox" name="Permissions" value="{{ value }}" checked> {{ label }}</label>{% endfor %}</fieldset>
+    <button class="btn save">GUARDAR USUARIO</button>
+  </form>
+  <table>
+    <tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Ministerio</th><th>Acciones</th></tr>
+    {% for r in rows %}<tr><td>{{ r['Username'] }}</td><td>{{ r['FullName'] or '' }}</td><td>{{ r['Role'] }}</td><td>{{ r['Ministry'] or '' }}</td><td><a class="btn cancel" href="{{ url_for('admin.user_edit', uid=r['Id']) }}">EDITAR</a> <form class="inline" method="post" action="{{ url_for('admin.user_delete', uid=r['Id']) }}" onsubmit="return confirm('¿Eliminar este usuario?');">{{ csrf() }}<button class="btn danger">ELIMINAR</button></form></td></tr>{% endfor %}
+  </table>
+<h2>Modificar acceso por módulo</h2>
+{% for r in rows if r.Role != 'Admin' %}<form method="post" class="panel">{{ csrf() }}<input type="hidden" name="action" value="permissions"><input type="hidden" name="uid" value="{{ r.Id }}"><b>{{ r.Username }}</b>
+{% for value,label in [('home','INICIO'),('members','MIEMBROS'),('ministries','MINISTERIOS'),('foligruc','FOLIGRUC'),('birthdays','CUMPLEAÑOS')] %}<label style="display:inline-block;margin:10px"><input type="checkbox" name="Permissions" value="{{ value }}" {{ 'checked' if value in (r.Permissions or '').split(',') }}> {{ label }}</label>{% endfor %}<button class="btn save">Actualizar permisos</button></form>{% endfor %}
+</div>
+{% endblock %}

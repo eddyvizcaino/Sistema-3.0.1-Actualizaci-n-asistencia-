@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="panel" style="max-width:650px;margin:auto">
+  <h1>Solicitud de registro de miembro</h1>
+  {% if sent %}
+    <p>Recibimos sus datos. La administración revisará la solicitud antes de crear su ficha.</p>
+  {% else %}
+    <p>Complete este formulario para solicitar su registro en la Iglesia de la Profecía Verón Central.</p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div style="display:none"><label>Sitio web <input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <div class="field"><label>Nombres *</label><input name="FirstName" maxlength="80" required></div>
+      <div class="field"><label>Apellidos *</label><input name="LastName" maxlength="80" required></div>
+      <div class="field"><label>Teléfono *</label><input name="Phone" maxlength="40" type="tel" required></div>
+      <div class="field"><label>Fecha de nacimiento</label><input name="BirthDate" type="date"></div>
+      <div class="field"><label>Cédula (opcional)</label><input name="Cedula" maxlength="30"></div>
+      <div class="field"><label>Dirección</label><input name="Address" maxlength="250"></div>
+      <div class="field"><label>Grupo *</label><select name="GroupName" required><option value="">Seleccione</option>{% for group in groups %}<option value="{{ group }}">{{ group }}</option>{% endfor %}</select></div>
+      <p>Usaremos estos datos para revisar la solicitud y administrar su registro en la iglesia. Puede solicitar correcciones a la administración.</p>
+      <button class="btn save">Enviar solicitud</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

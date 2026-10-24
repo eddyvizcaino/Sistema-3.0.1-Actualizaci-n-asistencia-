@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% block content %}
+<div class="panel"><h2>Calendario mensual</h2><form method="get"><label>Mes <input type="month" name="month" value="{{ month }}"></label> <button class="btn cancel">Ver mes</button></form><div class="calendar">{% for day in ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'] %}<b>{{ day }}</b>{% endfor %}{% for week in weeks %}{% for d in week %}<div class="calendar-day">{% if d %}<b>{{ d }}</b>{% for e in days[d] %}<p>{{ e.EventTime or '' }} {{ e.Name }}</p>{% endfor %}{% endif %}</div>{% endfor %}{% endfor %}</div></div>
+<div class="panel">
+  <a class="btn save" href="{{ url_for('events.event_new') }}">NUEVO EVENTO</a>
+  <table>
+    <tr><th>Título del evento</th><th>Fecha</th><th>Hora</th><th>Lugar</th><th>Ministerio</th><th>Responsable</th><th>Estado</th><th>Acciones</th></tr>
+    {% for r in rows %}
+    <tr {% if r['EventDate'] and r['EventDate'] < today %}style="color:#777"{% endif %}>
+      <td>{{ r['Name'] or '' }}{% if r['Reminder'] %}<br><small>Recordatorio: {{ r['Reminder'] }}</small>{% endif %}</td><td>{{ r['EventDate'] or '' }}</td><td>{{ r['EventTime'] or '' }}</td>
+      <td>{{ r['Venue'] or '' }}</td><td>{{ r['MinistryName'] or 'General' }}</td>
+      <td>{{ r['Responsible'] or '' }}</td><td>{{ r['Status'] or '' }}</td>
+      <td>
+        {% if r['can_edit'] %}
+        <a href="{{ url_for('events.event_edit', i=r['Id']) }}">Editar</a> ·
+        <form class="inline" method="post" action="{{ url_for('events.event_delete', i=r['Id']) }}"
+              onsubmit="return confirm('¿Eliminar este evento?')">
+          {{ csrf() }}<button class="linkbtn-inline">Eliminar</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="8" class="small">No hay eventos registrados.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

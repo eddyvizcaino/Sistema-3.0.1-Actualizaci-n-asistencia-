@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% block content %}
+<style>
+  .member-name{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;font-weight:600;letter-spacing:.01em;color:#172033}
+  .member-code{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-weight:700;white-space:nowrap}
+</style>
+<div class="member-page-head"><div><h1>MIEMBROS</h1><p class="small">{{ rows|length }} miembros registrados</p></div><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn" href="{{ url_for('members.import_trimestre_members') }}">IMPORTAR EXCEL</a><a class="btn save" href="{{ url_for('members.new_member') }}">+ NUEVO MIEMBRO</a></div></div>
+<div class="panel member-list-panel">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+    <form method="get" action="{{ url_for('members.members') }}" style="display:flex;gap:8px;flex:1;min-width:280px">
+      <input id="member-search" name="q" type="search" value="{{ q or '' }}" maxlength="100" placeholder="🔍 Buscar por código, nombre, apellido o teléfono…" aria-label="Buscar miembros" autocomplete="off" style="flex:1">
+      <button class="btn" type="submit">BUSCAR</button>
+      {% if q %}<a class="btn cancel" href="{{ url_for('members.members') }}">LIMPIAR</a>{% endif %}
+    </form>
+  </div>
+  {% if q %}<p class="small">Resultados para: <b>{{ q }}</b></p>{% endif %}
+  <table>
+    <tr><th>Código</th><th>Nombre</th><th>Apellido</th><th>Teléfono</th><th>Estado</th><th>Fecha de ingreso</th><th>Acciones</th></tr>
+    {% for r in rows %}
+    {% set first = r['FirstName'] or '' %}{% set last = r['LastName'] or '' %}
+    <tr class="member-row" data-search="{{ ((r['MemberCode'] or '') ~ ' ' ~ first ~ ' ' ~ last ~ ' ' ~ (r['Name'] or '') ~ ' ' ~ (r['Cedula'] or '') ~ ' ' ~ (r['Phone'] or ''))|lower|e }}">
+      <td class="member-code"><span class="member-code-badge">{{ r['MemberCode'] or '' }}</span></td>
+      <td class="member-name">{{ first or (r['Name'] or '') }}</td>
+      <td class="member-name">{{ last }}</td>
+      <td>{{ r['Phone'] or '' }}</td>
+      <td><span class="status-badge {{ 'inactive' if (r['Status'] or '')|lower != 'activo' else '' }}">{{ (r['Status'] or '')|upper }}</span></td><td>{{ r['JoinDate'] or '' }}</td>
+      <td>
+        <a class="btn cancel" href="{{ url_for('members.member_profile', i=r['Id']) }}">VER</a>
+        <a class="btn cancel" href="{{ url_for('members.edit_member', i=r['Id']) }}">EDITAR</a>
+      </td>
+    </tr>
+    {% else %}<tr><td colspan="7" class="small">No hay miembros para mostrar.</td></tr>{% endfor %}
+  </table>
+  <p id="member-search-empty" class="small" style="display:none;margin-top:12px">No se encontraron miembros con ese criterio.</p>
+</div>
+<script>
+(function(){
+  const input=document.getElementById('member-search'); if(!input) return;
+  const rows=Array.from(document.querySelectorAll('.member-row')); const empty=document.getElementById('member-search-empty');
+  const normalize=(v)=>(v||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').trim();
+  function filterMembers(){const q=normalize(input.value);let visible=0;rows.forEach(row=>{const ok=!q||normalize(row.dataset.search).includes(q);row.style.display=ok?'':'none';if(ok)visible++;});if(empty)empty.style.display=(q&&visible===0)?'':'none';}
+  input.addEventListener('input',filterMembers);input.addEventListener('search',filterMembers);filterMembers();
+})();
+</script>
+{% endblock %}

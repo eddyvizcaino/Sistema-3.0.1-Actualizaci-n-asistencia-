@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% block content %}
+<h1>IMPORTAR MIEMBROS — JULIO, AGOSTO Y SEPTIEMBRE 2026</h1>
+<div class="panel">
+<p>Se utilizarán exclusivamente los nombres del Excel del trimestre. No se importarán materias, calificaciones ni períodos a FOLIGRUC.</p>
+<p><b>Total:</b> {{ entries|length }} · <b>Ya registrados:</b> {{ entries|selectattr('status','equalto','existente')|list|length }} · <b>Nuevos:</b> {{ entries|selectattr('status','equalto','nuevo')|list|length }} · <b>Revisión manual:</b> {{ entries|selectattr('status','equalto','revisar')|list|length }}</p>
+{% if applied %}<p><strong>Este listado ya fue importado. No puede ejecutarse dos veces.</strong></p>{% else %}
+<form method="post" onsubmit="return confirm('¿Confirmar importación de los miembros NUEVOS? Los existentes no se modificarán.');">{{ csrf() }}<button class="btn save" type="submit">CONFIRMAR IMPORTACIÓN</button></form>
+{% endif %}
+<p class="small">Los nombres de una sola palabra requieren revisión y no se crearán automáticamente. Haz un respaldo de PostgreSQL antes de confirmar.</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Nombre</th><th>Resultado</th></tr></thead><tbody>
+{% for item in entries %}<tr><td>{{ loop.index }}</td><td>{{ item.name }}</td><td>{{ 'Ya existe' if item.status=='existente' else ('Revisar manualmente' if item.status=='revisar' else 'Se creará') }}</td></tr>{% endfor %}
+</tbody></table></div>
+</div>
+{% endblock %}

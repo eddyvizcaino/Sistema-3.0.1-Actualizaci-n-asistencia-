@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="panel">
+  <h2>Respaldo y restauración PostgreSQL</h2>
+  <p>El respaldo incluye miembros, fotos, ministerios, usuarios, eventos, auditoría y FOLIGRUC.</p>
+  <form method="post" action="{{ url_for('admin.backup_download') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn save">Descargar respaldo actual</button>
+  </form>
+  <h3>Restaurar una copia</h3>
+  <p>Descargue y conserve primero el respaldo actual. Restaurar reemplaza todos los registros de PostgreSQL y cierra su sesión. Guarde los archivos en un lugar privado.</p>
+  <form method="post" action="{{ url_for('admin.backup_restore') }}" enctype="multipart/form-data" onsubmit="return confirm('¿Reemplazar todos los datos actuales con este respaldo?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label for="backup_file">Respaldo JSON</label><input id="backup_file" name="backup_file" type="file" accept=".json,application/json" required></div>
+    <div class="field"><label for="confirmation">Escriba RESTAURAR para confirmar</label><input id="confirmation" name="confirmation" required autocomplete="off"></div>
+    <button class="btn danger">Restaurar base de datos</button>
+  </form>
+</div>
+{% endblock %}

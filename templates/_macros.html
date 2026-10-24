@@ -1,0 +1,28 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro field(label, name, value='', type='text', required=False, maxlength=None, placeholder='', autocomplete=None) %}
+<div class="field">
+  <label for="f_{{ name }}">{{ label }}</label>
+  <input id="f_{{ name }}" type="{{ type }}" name="{{ name }}" value="{{ value if value is not none else '' }}"
+         {% if required %}required{% endif %}
+         {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+         {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+         {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}>
+</div>
+{% endmacro %}
+
+{% macro textarea(label, name, value='', maxlength=2000) %}
+<div class="field">
+  <label for="f_{{ name }}">{{ label }}</label>
+  <textarea id="f_{{ name }}" name="{{ name }}" maxlength="{{ maxlength }}">{{ value if value is not none else '' }}</textarea>
+</div>
+{% endmacro %}
+
+{% macro select(label, name, options, selected='') %}
+<div class="field">
+  <label for="f_{{ name }}">{{ label }}</label>
+  <select id="f_{{ name }}" name="{{ name }}">
+    {% for o in options %}<option {% if o == selected %}selected{% endif %}>{{ o }}</option>{% endfor %}
+  </select>
+</div>
+{% endmacro %}

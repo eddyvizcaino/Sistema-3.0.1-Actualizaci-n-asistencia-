@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% block content %}
+<div class="panel">
+  <h2>PROTECCIÓN DE DATOS</h2>
+  <p>Cada 5 minutos se actualiza una copia automática (reemplaza a la anterior). Además se guarda una copia diaria y se conservan las últimas 14.</p>
+  <p><b>Última copia automática:</b> {{ last or 'Todavía no creada' }}</p>
+  <form method="post" action="{{ url_for('admin.backup_download') }}" class="actions">
+    {{ csrf() }}
+    <button class="btn save">CREAR / DESCARGAR COPIA MANUAL</button>
+  </form>
+</div>
+<div class="panel">
+  <h2>RESTAURAR COPIA DE SEGURIDAD</h2>
+  <div class="notice"><b>Importante:</b> antes de restaurar, el sistema guardará automáticamente una copia de la base de datos actual (iglesia_ANTES_RESTAURAR_…). Al terminar deberá iniciar sesión de nuevo.</div>
+  <form method="post" action="{{ url_for('admin.backup_restore') }}" enctype="multipart/form-data">
+    {{ csrf() }}
+    <div class="field"><label for="saved_backup">Restaurar una copia guardada en esta carpeta</label>
+      <select id="saved_backup" name="saved_backup">
+        <option value="">Seleccione una copia</option>
+        {% for name, when in backups %}<option value="{{ name }}">{{ name }} — {{ when }}</option>{% endfor %}
+      </select></div>
+    <div class="field"><label for="backup_file">O seleccionar un archivo .db desde la computadora</label>
+      <input id="backup_file" type="file" name="backup_file" accept=".db"></div>
+    <button class="btn danger" onclick="return confirm('¿Está seguro de restaurar esta copia? La información actual será reemplazada. Antes se creará una copia de seguridad del estado actual.')">RESTAURAR COPIA</button>
+  </form>
+  <p class="small">Esta función está disponible únicamente para Administrador.</p>
+</div>
+{% endblock %}

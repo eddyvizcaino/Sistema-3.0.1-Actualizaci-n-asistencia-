@@ -1,0 +1,9 @@
+{% extends 'base.html' %}{% block content %}
+<div class="panel"><h2>Importar 166 estudiantes a FOLIGRUC</h2>
+<p>Se crean estudiantes externos sin necesidad de estar en Miembros. No se importan materias, notas ni inscripciones. Los estudiantes ya registrados se conservan.</p>
+<p><strong>Nuevos:</strong> {{ entries|selectattr('status','equalto','nuevo')|list|length }} · <strong>Ya inscritos:</strong> {{ entries|selectattr('status','equalto','existente')|list|length }} · <strong>Revisar:</strong> {{ entries|selectattr('status','equalto','revisar')|list|length }}</p>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn save" type="submit">Confirmar importación de estudiantes externos</button> <a class="btn cancel" href="{{ url_for('foligruc.students') }}">Volver</a></form></div>
+<div class="panel"><table><thead><tr><th>Nombre del Excel</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>
+{% for e in entries %}<tr><td>{{ e.name }}</td><td>{{ 'Estudiante externo' if e.status=='nuevo' else 'Ya registrado' }}</td><td>{{ 'Nuevo estudiante' if e.status=='nuevo' else ('Ya inscrito' if e.status=='existente' else 'Revisión manual') }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

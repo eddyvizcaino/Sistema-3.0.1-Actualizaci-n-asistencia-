@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% block content %}
+<div class="panel">
+<h2>EDITAR USUARIO</h2>
+<form method="post">{{ csrf() }}
+<div class="grid2"><div>
+<div class="field"><label>Nombre completo</label><input name="FullName" maxlength="120" value="{{ target.get('FullName') or '' }}"></div>
+<div class="field"><label>Usuario</label><input name="Username" required maxlength="60" value="{{ target.get('Username') or '' }}"></div>
+<div class="field"><label>Nueva contraseña</label><input type="password" name="Password" minlength="8" autocomplete="new-password"><div class="small">Déjela vacía para conservar la contraseña actual.</div></div>
+</div><div>
+<div class="field"><label>Tipo de usuario</label><select name="Role"><option value="Ministry" {{ 'selected' if target.get('Role')=='Ministry' }}>Líder Ministerio</option><option value="Pastor" {{ 'selected' if target.get('Role')=='Pastor' }}>Pastor/a</option><option value="AssistantPastor" {{ 'selected' if target.get('Role')=='AssistantPastor' }}>Secretaria General</option><option value="Attendance" {% if target.get('Role') == 'Attendance' %}selected{% endif %}>Registro de Asistencia</option>
+<option value="Admin" {{ 'selected' if target.get('Role')=='Admin' }}>Administrador</option></select></div>
+<div class="field"><label>Ministerio asignado</label><select name="MinistryId"><option value="">Sin asignar / Administrador</option>{% for m in mins %}<option value="{{ m['Id'] }}" {{ 'selected' if target.get('MinistryId') == m['Id'] }}>{{ m['Name'] }}</option>{% endfor %}</select></div>
+<label><input type="checkbox" name="Active" value="1" {{ 'checked' if target.get('Active',1)|int == 1 }}> Cuenta activa</label>
+</div></div>
+<fieldset><legend>Módulos permitidos</legend>{% for value,label in [('home','INICIO'),('members','MIEMBROS'),('ministries','MINISTERIOS'),('foligruc','FOLIGRUC'),('birthdays','CUMPLEAÑOS')] %}<label style="display:inline-block;margin:10px"><input type="checkbox" name="Permissions" value="{{ value }}" {{ 'checked' if target.get('Role')=='Admin' or value in (target.get('Permissions') or '').split(',') }}> {{ label }}</label>{% endfor %}</fieldset>
+<div class="actions"><button class="btn save">GUARDAR CAMBIOS</button><a class="btn cancel" href="{{ url_for('admin.users') }}">CANCELAR</a></div>
+</form></div>
+{% endblock %}

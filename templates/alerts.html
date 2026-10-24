@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf, field, textarea, select %}
+{% block content %}
+<div class="panel">
+  <form method="post">
+    {{ csrf() }}
+    <div class="grid2">
+      {{ field('Título', 'Title', '', required=True, maxlength=150) }}
+      {{ field('Fecha', 'DueDate', '', type='date') }}
+    </div>
+    {{ textarea('Mensaje', 'Message', '') }}
+    {{ select('Prioridad', 'Priority', priorities, 'Normal') }}
+    <button class="btn save">CREAR ALERTA</button>
+  </form>
+</div>
+<div class="panel">
+  <table>
+    <tr><th>Fecha</th><th>Prioridad</th><th>Título</th><th>Mensaje</th></tr>
+    {% for r in rows %}
+    <tr><td>{{ r['DueDate'] or '' }}</td><td>{{ r['Priority'] }}</td><td>{{ r['Title'] }}</td><td>{{ r['Message'] or '' }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
